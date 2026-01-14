@@ -1,4 +1,4 @@
-# 🗨️ Hashzap - Live Chat Profissional
+# Hashzap - Live Chat
 
 > Um sistema de chat em tempo real moderno e multiplataforma, desenvolvido com Python. O Hashzap permite a comunicação instantânea tanto via web (Flask + SocketIO) quanto via desktop (Flet), unindo praticidade e uma interface elegante inspirada nos principais apps de mensagens.
 
