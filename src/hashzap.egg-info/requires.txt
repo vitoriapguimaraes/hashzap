@@ -1,5 +1,5 @@
 flask
 flask-socketio
-flet
+flet==0.21.2
 python-dotenv
 eventlet
