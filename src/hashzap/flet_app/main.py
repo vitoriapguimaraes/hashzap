@@ -9,12 +9,16 @@ def main(page: ft.Page):
     page.spacing = 0
     page.window_width = 400
     page.window_height = 650
-    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-    page.vertical_alignment = ft.MainAxisAlignment.CENTER
+    page.horizontal_alignment = ft.CrossAxisAlignment.STRETCH
+    page.vertical_alignment = ft.MainAxisAlignment.START
 
-    # Elementos do Chat
+    # Campos de input
     user_name = ft.TextField(
-        label="Membro", width=200, border_radius=10, text_align=ft.TextAlign.CENTER
+        label="Escolha seu nome",
+        width=250,
+        border_radius=10,
+        bgcolor=ft.colors.WHITE,
+        text_align=ft.TextAlign.CENTER,
     )
     message_field = ft.TextField(
         hint_text="Mensagem...", expand=True, border_radius=25, content_padding=15
@@ -40,7 +44,6 @@ def main(page: ft.Page):
                 bgcolor=ft.colors.GREEN_100 if is_me else ft.colors.GREY_100,
                 border_radius=10,
                 padding=10,
-                max_width=300,
             )
             chat.controls.append(
                 ft.Row(
@@ -79,6 +82,13 @@ def main(page: ft.Page):
 
     message_field.on_submit = send_click
 
+    def exit_chat(e):
+        page.clean()
+        page.horizontal_alignment = ft.CrossAxisAlignment.STRETCH
+        page.vertical_alignment = ft.MainAxisAlignment.START
+        page.add(login_screen)
+        page.update()
+
     def join_chat(e):
         if not user_name.value.strip():
             user_name.error_text = "Nome Obrigatório!"
@@ -95,6 +105,7 @@ def main(page: ft.Page):
 
         page.add(
             ft.AppBar(
+                leading=ft.IconButton("arrow_back", on_click=exit_chat),
                 title=ft.Text("Hashzap"),
                 bgcolor=ft.colors.PRIMARY,
                 color=ft.colors.WHITE,
@@ -105,8 +116,8 @@ def main(page: ft.Page):
                 expand=True,
                 bgcolor=ft.colors.BLUE_GREY_50,
                 padding=20,
-                background_image_src="https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png",
-                background_image_fit=ft.ImageFit.COVER,
+                image_src="https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png",
+                image_fit=ft.ImageFit.COVER,
             ),
             ft.Container(
                 content=ft.Row(
@@ -125,29 +136,58 @@ def main(page: ft.Page):
         )
         page.update()
 
-    # Login Screen
+    # Login Screen Refatorado com Gradiente
     login_screen = ft.Container(
         expand=True,
+        gradient=ft.LinearGradient(
+            begin=ft.alignment.top_left,
+            end=ft.alignment.bottom_right,
+            colors=[ft.colors.BLUE_700, ft.colors.CYAN_700],
+        ),
         content=ft.Column(
             [
-                ft.Icon("chat", size=50, color=ft.colors.PRIMARY),
-                ft.Text("Hashzap", size=32, weight=ft.FontWeight.BOLD),
-                ft.Text("Entrar na conversa", color=ft.colors.GREY_600),
-                user_name,
-                ft.FilledButton(
-                    "Entrar",
-                    on_click=join_chat,
-                    width=200,
-                    style=ft.ButtonStyle(
-                        bgcolor=ft.colors.PRIMARY, color=ft.colors.WHITE
+                ft.Container(
+                    content=ft.Column(
+                        [
+                            ft.Icon("chat", size=60, color=ft.colors.BLUE_700),
+                            ft.Text(
+                                "Hashzap",
+                                size=32,
+                                weight=ft.FontWeight.BOLD,
+                                color=ft.colors.BLUE_900,
+                            ),
+                            ft.Text(
+                                "Entre para conversar", color=ft.colors.BLUE_GREY_600
+                            ),
+                            ft.Divider(height=20, color=ft.colors.TRANSPARENT),
+                            user_name,
+                            ft.Divider(height=10, color=ft.colors.TRANSPARENT),
+                            ft.FilledButton(
+                                "Entrar no Chat",
+                                on_click=join_chat,
+                                width=250,
+                                height=50,
+                                style=ft.ButtonStyle(
+                                    bgcolor=ft.colors.BLUE_700,
+                                    color=ft.colors.WHITE,
+                                    shape=ft.RoundedRectangleBorder(radius=10),
+                                ),
+                            ),
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        spacing=10,
                     ),
-                ),
+                    padding=40,
+                    bgcolor=ft.colors.WHITE,
+                    border_radius=20,
+                    shadow=ft.BoxShadow(blur_radius=20, color=ft.colors.BLACK26),
+                    width=320,
+                )
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=20,
         ),
-        bgcolor=ft.colors.BLUE_GREY_50,
     )
 
     page.add(login_screen)
