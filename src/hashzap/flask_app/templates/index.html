@@ -70,6 +70,13 @@
       .message.received {
         background-color: var(--white);
         align-self: flex-start;
+        border-bottom-left-radius: 2px;
+      }
+
+      .message.sent {
+        background-color: var(--bubble-sent);
+        align-self: flex-end;
+        border-bottom-right-radius: 2px;
       }
 
       .message .user {
@@ -209,9 +216,16 @@
         socket.on("connect", () => console.log("Conectado ao Hashzap!"));
 
         socket.on("message", function (data) {
+          const isMe = data.usuario === $user.val().trim();
+          const sideClass = isMe ? "sent" : "received";
+
           const messageHtml = `
-                    <div class="message received">
-                        <span class="user">${data.usuario}</span>
+                    <div class="message ${sideClass}">
+                        ${
+                          isMe
+                            ? ""
+                            : `<span class="user">${data.usuario}</span>`
+                        }
                         <div class="content">${data.texto}</div>
                         <span class="time">${data.timestamp}</span>
                     </div>
