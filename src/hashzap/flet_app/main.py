@@ -8,46 +8,60 @@ def main(page: ft.Page):
     page.padding = 0
     page.spacing = 0
     page.window_width = 400
-    page.window_height = 600
+    page.window_height = 650
+    page.horizontal_alignment = ft.CrossAxisAlignment.STRETCH
+    page.vertical_alignment = ft.MainAxisAlignment.START
 
-    # Componentes da UI
-    chat = ft.Column(
-        expand=True,
-        scroll=ft.ScrollMode.AUTO,
-        spacing=10,
-        padding=20,
+    # Campos de input
+    user_name = ft.TextField(
+        label="Escolha seu nome",
+        width=250,
+        border_radius=10,
+        bgcolor=ft.colors.WHITE,
+        text_align=ft.TextAlign.CENTER,
     )
+    message_field = ft.TextField(
+        hint_text="Mensagem...", expand=True, border_radius=25, content_padding=15
+    )
+    chat = ft.Column(expand=True, scroll=ft.ScrollMode.AUTO, spacing=10)
 
     def on_message_received(message):
-        """Callback recebido via PubSub"""
         if message["type"] == "chat":
+            is_me = message["user"] == user_name.value
             msg_bubble = ft.Container(
                 content=ft.Column(
                     [
                         ft.Text(
-                            message["user"],
+                            "Você" if is_me else message["user"],
                             size=12,
                             weight=ft.FontWeight.BOLD,
-                            color=ft.colors.PRIMARY,
+                            color=ft.colors.BLUE_700 if is_me else ft.colors.PRIMARY,
                         ),
                         ft.Text(message["text"], size=14),
                     ],
                     spacing=2,
                 ),
-                bgcolor=ft.colors.GREY_100,
+                bgcolor=ft.colors.GREEN_100 if is_me else ft.colors.GREY_100,
                 border_radius=10,
                 padding=10,
-                alignment=ft.alignment.center_left,
             )
-            chat.controls.append(msg_bubble)
+            chat.controls.append(
+                ft.Row(
+                    [msg_bubble],
+                    alignment=(
+                        ft.MainAxisAlignment.END
+                        if is_me
+                        else ft.MainAxisAlignment.START
+                    ),
+                )
+            )
         elif message["type"] == "system":
             chat.controls.append(
-                ft.Text(
-                    message["text"],
-                    size=12,
-                    italic=True,
-                    color=ft.colors.GREY_600,
-                    text_align=ft.TextAlign.CENTER,
+                ft.Container(
+                    content=ft.Text(
+                        message["text"], size=12, italic=True, color=ft.colors.GREY_600
+                    ),
+                    alignment=ft.alignment.center,
                 )
             )
         page.update()
@@ -55,64 +69,66 @@ def main(page: ft.Page):
     page.pubsub.subscribe(on_message_received)
 
     def send_click(e):
-        if not message_field.value.strip():
-            return
+        if message_field.value.strip():
+            page.pubsub.send_all(
+                {
+                    "type": "chat",
+                    "user": user_name.value,
+                    "text": message_field.value.strip(),
+                }
+            )
+            message_field.value = ""
+            page.update()
 
-        page.pubsub.send_all(
-            {
-                "type": "chat",
-                "user": user_name.value,
-                "text": message_field.value.strip(),
-            }
-        )
-        message_field.value = ""
+    message_field.on_submit = send_click
+
+    def exit_chat(e):
+        page.clean()
+        page.horizontal_alignment = ft.CrossAxisAlignment.STRETCH
+        page.vertical_alignment = ft.MainAxisAlignment.START
+        page.add(login_screen)
         page.update()
 
-    user_name = ft.TextField(
-        label="Seu Nome",
-        width=150,
-        border_radius=25,
-        content_padding=15,
-    )
-
-    message_field = ft.TextField(
-        hint_text="Digite uma mensagem...",
-        expand=True,
-        border_radius=25,
-        on_submit=send_click,
-        content_padding=15,
-    )
-
-    # Janela de entrada (Login)
     def join_chat(e):
         if not user_name.value.strip():
             user_name.error_text = "Nome Obrigatório!"
             page.update()
             return
 
-        login_dialog.open = False
+        page.clean()
+        page.horizontal_alignment = ft.CrossAxisAlignment.STRETCH
+        page.vertical_alignment = ft.MainAxisAlignment.START
+
         page.pubsub.send_all(
             {"type": "system", "text": f"--- {user_name.value} entrou no chat ---"}
         )
+
         page.add(
             ft.AppBar(
+                leading=ft.IconButton("arrow_back", on_click=exit_chat),
                 title=ft.Text("Hashzap"),
                 bgcolor=ft.colors.PRIMARY,
                 color=ft.colors.WHITE,
                 center_title=True,
             ),
-            ft.Container(content=chat, expand=True, bgcolor=ft.colors.BLUE_GREY_50),
+            ft.Container(
+                content=chat,
+                expand=True,
+                bgcolor=ft.colors.BLUE_GREY_50,
+                padding=20,
+                image_src="https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png",
+                image_fit=ft.ImageFit.COVER,
+            ),
             ft.Container(
                 content=ft.Row(
                     [
                         message_field,
                         ft.IconButton(
-                            ft.icons.SEND_ROUNDED,
+                            "send",
                             on_click=send_click,
                             icon_color=ft.colors.PRIMARY,
                         ),
-                    ],
-                    spacing=10,
+                    ]
                 ),
                 padding=10,
                 bgcolor=ft.colors.WHITE,
@@ -120,19 +136,61 @@ def main(page: ft.Page):
         )
         page.update()
 
-    login_dialog = ft.AlertDialog(
-        modal=True,
-        title=ft.Text("Bem-vindo ao Hashzap"),
-        content=ft.Column(
-            [ft.Text("Escolha como quer ser chamado no chat:"), user_name], tight=True
+    # Login Screen Refatorado com Gradiente
+    login_screen = ft.Container(
+        expand=True,
+        gradient=ft.LinearGradient(
+            begin=ft.alignment.top_left,
+            end=ft.alignment.bottom_right,
+            colors=[ft.colors.BLUE_700, ft.colors.CYAN_700],
         ),
-        actions=[ft.ElevatedButton("Entrar no Chat", on_click=join_chat)],
-        actions_alignment=ft.MainAxisAlignment.CENTER,
+        content=ft.Column(
+            [
+                ft.Container(
+                    content=ft.Column(
+                        [
+                            ft.Icon("chat", size=60, color=ft.colors.BLUE_700),
+                            ft.Text(
+                                "Hashzap",
+                                size=32,
+                                weight=ft.FontWeight.BOLD,
+                                color=ft.colors.BLUE_900,
+                            ),
+                            ft.Text(
+                                "Entre para conversar", color=ft.colors.BLUE_GREY_600
+                            ),
+                            ft.Divider(height=20, color=ft.colors.TRANSPARENT),
+                            user_name,
+                            ft.Divider(height=10, color=ft.colors.TRANSPARENT),
+                            ft.FilledButton(
+                                "Entrar no Chat",
+                                on_click=join_chat,
+                                width=250,
+                                height=50,
+                                style=ft.ButtonStyle(
+                                    bgcolor=ft.colors.BLUE_700,
+                                    color=ft.colors.WHITE,
+                                    shape=ft.RoundedRectangleBorder(radius=10),
+                                ),
+                            ),
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        spacing=10,
+                    ),
+                    padding=40,
+                    bgcolor=ft.colors.WHITE,
+                    border_radius=20,
+                    shadow=ft.BoxShadow(blur_radius=20, color=ft.colors.BLACK26),
+                    width=320,
+                )
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        ),
     )
 
-    page.dialog = login_dialog
-    login_dialog.open = True
-    page.update()
+    page.add(login_screen)
 
 
 if __name__ == "__main__":
